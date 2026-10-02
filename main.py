@@ -18,8 +18,7 @@ pikupText = '🏃‍♂️ САМОВЫВОЗ 🏃‍♀️'
 deliveryText = '📦 ДОСТАВКА 📦'
 specialText = 'nvjklfhahpoqeu79801845ioewsdf'
 data = {}
-bot_id = '8005895577:AAHXUPXLV3_qy-Nja3l1xETb_rFtFyHMm64'  # test
-#bot_id='6239724114:AAHzwC2VADCpnRDtMMsO7l6FjYdkA-cjlaA'#my bot
+
 bot = telebot.TeleBot(bot_id)
 
 
