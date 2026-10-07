@@ -7,8 +7,11 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 from telebot import types
-
-db_name = 'business.db'
+from dotenv import load_dotenv
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
+DATABASE=os.getenv("DATABASE")
+#DATABASE = 'business.db'
 productIsOutText = 'Товар закончился '
 typeProductText = 'Выбери тип товара'
 typeModelText = 'Выбери фирму'
@@ -18,9 +21,8 @@ pikupText = '🏃‍♂️ САМОВЫВОЗ 🏃‍♀️'
 deliveryText = '📦 ДОСТАВКА 📦'
 specialText = 'nvjklfhahpoqeu79801845ioewsdf'
 data = {}
-bot_id = '8005895577:AAHXUPXLV3_qy-Nja3l1xETb_rFtFyHMm64'  # test
-#bot_id='6239724114:AAHzwC2VADCpnRDtMMsO7l6FjYdkA-cjlaA'#my bot
-bot = telebot.TeleBot(bot_id)
+
+bot = telebot.TeleBot(TOKEN)
 
 
 def clearData(message):
@@ -39,7 +41,7 @@ def clearData(message):
 
 def getPermission(id):
     #return True
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute('SELECT id_telegram FROM users')
     dataEl = cur.fetchall()
@@ -177,7 +179,7 @@ def callback(call):
         data['id_messages' + str(call.message.chat.id)].append(msg.message_id)
         bot.register_next_step_handler(call.message, searchUser)
     elif call.data == 'del_card':
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("SELECT number_card FROM cards")
         dataEl = cur.fetchall()
@@ -207,7 +209,7 @@ def callback(call):
         data['id_messages' + str(call.message.chat.id)].append(msg.message_id)
         bot.register_next_step_handler(call.message, addUser)
     elif call.data == 'del_user':
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("SELECT id_telegram FROM users")
         dataEl = cur.fetchall()
@@ -298,7 +300,7 @@ def setCard(message):
     if len(message.text) == 16:
         try:
             z = int(message.text)
-            conn = sqlite3.connect(db_name)
+            conn = sqlite3.connect(DATABASE)
             cur = conn.cursor()
             cur.execute("INSERT INTO cards(number_card) VALUES('%s')" % (message.text))
             conn.commit()
@@ -331,7 +333,7 @@ def delCard(message):
     if message.text == cancelText:
         cancelMessage(message, 0)
         return
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute("DELETE FROM cards WHERE number_card='%s'" % (message.text))
     conn.commit()
@@ -351,7 +353,7 @@ def changeUser(message):
         return
     try:
         z = int(message.text)
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("UPDATE stock_users SET id_telegram='%s'" % (message.text))
         conn.commit()
@@ -378,7 +380,7 @@ def addUser(message):
         return
     try:
         z = int(message.text)
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("INSERT INTO users(id_telegram) VALUES('%s')" % (message.text))
         conn.commit()
@@ -408,7 +410,7 @@ def delUser(message):
         cancelMessage(message, 0)
         bot.send_message(message.chat.id, f'Нельзя удалять себя.')
         return
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute("DELETE FROM users WHERE id_telegram='%s'" % (message.text))
     conn.commit()
@@ -419,7 +421,7 @@ def delUser(message):
 
 
 def getCards(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute('SELECT number_card FROM cards')
 
@@ -435,7 +437,7 @@ def getCards(message):
 
 
 def statisticsCur(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     date = datetime.fromtimestamp(message.date).strftime("%Y-%m-%d")
     cur.execute("SELECT SUM(cash) FROM process WHERE status=2 AND date(date_time)='%s'" % (date))
@@ -473,7 +475,7 @@ def statisticsCur(message):
 
 
 def statisticsAll(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute("SELECT SUM(cash) FROM process WHERE status=2")
     dataEl = cur.fetchone()
@@ -528,7 +530,7 @@ def statisticsAll(message):
 
 
 def statisticsAllMonth(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "select sum(cash* (CASE WHEN status = 2 THEN 1 ELSE -1 END)),strftime('%Y-%m', date_time) from process GROUP by strftime('%Y-%m', date_time)")
@@ -550,7 +552,7 @@ def statisticsAllMonth(message):
 
 
 def statisticsCurMonth(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "select product_group.name, sum(CASE WHEN status = 2 THEN 1 ELSE -1 END),sum(cash* (CASE WHEN status = 2 THEN 1 ELSE -1 END)) from process INNER JOIN product on process.id_product=product.id AND strftime('%m-%Y', process.date_time)=strftime('%m-%Y', DATE()) INNER JOIN product_group on product_group.id=product.id_product_group GROUP by product.id_product_group")
@@ -601,7 +603,7 @@ def setDelivery(message):
 
 
 def choice_delivery(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute('SELECT name FROM tc_delivery')
     dataEl = cur.fetchall()
@@ -633,7 +635,7 @@ def setDeliveryGetNumber(message):
         return
 
     if message.text != specialText:
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(DATABASE)
         cur = conn.cursor()
         cur.execute("SELECT type FROM tc_delivery WHERE name='%s'" % (message.text))
 
@@ -717,7 +719,7 @@ def createBarcodeA(message, text1, text2, text3):
     document.close()
     document = open(pdfName, 'rb')
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute("SELECT id_telegram FROM stock_users")
     dataEl = cur.fetchall()
@@ -755,7 +757,7 @@ def setNumberGetGroup(message):
 
 def choice_product(message):
     # выводит список групп товаров ПЕРЧАТКИ СУМКИ И Т.Д.
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     if data['menu' + str(message.chat.id)] == 2:
         cur.execute(
@@ -800,7 +802,7 @@ def setGroupGetName(message):
     else:
         data['id_messages' + str(message.chat.id)].remove(message.message_id)
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     if data['menu' + str(message.chat.id)] == 2:
         cur.execute(
@@ -843,7 +845,7 @@ def setNameGetModel(message):
     else:
         data['id_messages' + str(message.chat.id)].remove(message.message_id)
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     if data['menu' + str(message.chat.id)] == 2:
         cur.execute(
@@ -890,7 +892,7 @@ def setModelGetSize(message):
     else:
         data['id_messages' + str(message.chat.id)].remove(message.message_id)
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     if data['menu' + str(message.chat.id)] == 2:
         cur.execute(
@@ -958,7 +960,7 @@ def setSizeGetPrice(message):
     if data['menu' + str(message.chat.id)] == 7:
         changeActivate(message)
         return
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "SELECT product.price FROM product_group INNER JOIN product on product.activate=1 AND product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' AND product.model='%s' AND product.size='%s'" % (
@@ -999,7 +1001,7 @@ def setPrice(message):
             setModelGetSize(message)
         return
     price = message.text
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "SELECT product.id, product.percent FROM product_group INNER JOIN product on product.activate=1 AND product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' AND product.model='%s' AND product.size='%s'" % (
@@ -1015,7 +1017,7 @@ def setPrice(message):
 
 
 def changeActivate(message):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "UPDATE product SET activate ='0' WHERE id in (SELECT product.id FROM product_group INNER JOIN product on product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' AND product.model='%s'  AND product.size='%s')" % (
@@ -1052,7 +1054,7 @@ def changePrice(message):
         bot.register_next_step_handler(message, changePrice)
         return
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "UPDATE product SET price='%s' WHERE id in (SELECT product.id FROM product_group INNER JOIN product on product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' AND product.model='%s')" % (
@@ -1097,7 +1099,7 @@ def changePrDelivery(message):
         setNameGetModel(message)
         return
 
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "UPDATE product SET percent='%s' WHERE id in (SELECT product.id FROM product_group INNER JOIN product on product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' AND product.model='%s')" % (
@@ -1115,7 +1117,7 @@ def changePrDelivery(message):
 
 
 def setRefund(message, id, price, percent):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "SELECT id, count, cost_price FROM store WHERE id_product='%s' order by date(date_time) DESC" % (id))
@@ -1148,7 +1150,7 @@ def setRefund(message, id, price, percent):
 
 
 def setSale(message, id, price, percent):
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "SELECT id, count, cost_price FROM store WHERE id_product='%s' AND count<>0 order by date(date_time)" % (id))
@@ -1189,7 +1191,7 @@ def getAvailability(message):
     nameProduct = data['name' + str(message.chat.id)]
     group = data['group' + str(message.chat.id)]
     text = ""
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(DATABASE)
     cur = conn.cursor()
     cur.execute(
         "SELECT product.id FROM product_group INNER JOIN product on product.activate=1 AND product.id_product_group=product_group.id WHERE product_group.name='%s' AND product.name='%s' ORDER BY product.model" % (
