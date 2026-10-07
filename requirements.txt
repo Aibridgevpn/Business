@@ -4,3 +4,4 @@ code128
 python-barcode
 reportlab
 Pillow
+python-dotenv
